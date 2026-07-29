@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <title>✨ Magic Hands — AR Playground</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+</head>
+<body>
+  <!-- Camera feed + drawing surface -->
+  <div id="stage">
+    <video id="video" playsinline autoplay muted></video>
+    <canvas id="overlay"></canvas>
+
+    <!-- Loading / permission screen -->
+    <div id="splash">
+      <div class="splash-card">
+        <div class="splash-emoji">🖐️✨</div>
+        <h1>Magic Hands</h1>
+        <p class="tag">An AR playground you control with your bare hands.</p>
+        <ul class="how">
+          <li>🫳 <b>Wave</b> your hand to leave trails of light</li>
+          <li>🤏 <b>Pinch</b> your thumb + index finger to grab &amp; act</li>
+          <li>🎮 Switch modes and just play</li>
+        </ul>
+        <button id="startBtn">Enable Camera &amp; Play</button>
+        <p class="privacy">🔒 100% on-device. Video never leaves your browser.</p>
+        <p id="loadStatus" class="load-status"></p>
+      </div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="brand">✨ Magic Hands</div>
+        <div id="scoreBox" class="score-box">Score <span id="score">0</span></div>
+      </div>
+
+      <div class="hud-hint" id="modeHint"></div>
+
+      <div class="hud-bottom">
+        <div class="mode-switch" id="modeSwitch">
+          <button class="mode-btn active" data-mode="wand">🪄 Wand</button>
+          <button class="mode-btn" data-mode="bubbles">🫧 Bubble Pop</button>
+          <button class="mode-btn" data-mode="paint">🎨 Air Paint</button>
+          <button class="mode-btn" data-mode="force">🌀 Force Field</button>
+        </div>
+        <div class="tools">
+          <button id="clearBtn" class="tool-btn" title="Clear">🧹</button>
+          <button id="mirrorBtn" class="tool-btn active" title="Mirror camera">🪞</button>
+          <button id="fsBtn" class="tool-btn" title="Fullscreen">⛶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MediaPipe Hands (runs on the user's device) -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
+
+  <script src="js/particles.js"></script>
+  <script src="js/modes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
