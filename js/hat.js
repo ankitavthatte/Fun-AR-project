@@ -1,12 +1,19 @@
 /* ------------------------------------------------------------------
-   Magician's top hat — a vector face filter that rides on your head.
+   Cute mini magician's top hat — a vector face filter that perches,
+   tilted, on the side of your head.
 
    Uses Face Mesh landmarks to find head width, the top of the forehead,
-   and the head-tilt (roll), then draws a classic magician top hat
-   (brim + crown + band + a little sparkle) that tracks all three.
+   and the head-tilt (roll), then draws a tiny jaunty top hat (brim +
+   short rounded crown + band + a little bow & sparkle) that tracks them.
 ------------------------------------------------------------------- */
 
-// coverMap() is shared from beauty.js (same global scope).
+// object-fit: cover mapping — matches how the <video> is scaled/cropped on
+// screen, so the filter lines up with the visible face.
+function coverMap(vw, vh, w, h) {
+  const scale = Math.max(w / vw, h / vh);
+  const dw = vw * scale, dh = vh * scale;
+  return { dw, dh, ox: (w - dw) / 2, oy: (h - dh) / 2 };
+}
 
 function drawHat(ctx, lms, video, w, h, mirror) {
   const vw = video.videoWidth, vh = video.videoHeight;
@@ -23,32 +30,34 @@ function drawHat(ctx, lms, video, w, h, mirror) {
   const faceW = Math.hypot(right.x - left.x, right.y - left.y);
   if (!faceW) return;
 
-  // Head "up" direction (chin -> forehead) to lift the hat above the hairline.
+  // Head "up" direction (chin -> forehead) and "side" direction (across cheeks).
   let ux = foreheadTop.x - chin.x, uy = foreheadTop.y - chin.y;
-  const ulen = Math.hypot(ux, uy) || 1;
-  ux /= ulen; uy /= ulen;
+  const ulen = Math.hypot(ux, uy) || 1; ux /= ulen; uy /= ulen;
+  const sx = (right.x - left.x) / faceW, sy = (right.y - left.y) / faceW;
 
-  const anchorX = foreheadTop.x + ux * faceW * 0.42;
-  const anchorY = foreheadTop.y + uy * faceW * 0.42;
+  // Perch the little hat above the forehead and off to one side.
+  const anchorX = foreheadTop.x + ux * faceW * 0.30 + sx * faceW * 0.30;
+  const anchorY = foreheadTop.y + uy * faceW * 0.30 + sy * faceW * 0.30;
 
-  // Roll: tilt of the line across the cheeks.
+  // Roll of the head + a jaunty extra tilt so it sits at a cute angle.
   const roll = Math.atan2(right.y - left.y, right.x - left.x);
+  const jaunty = -0.38; // ~ -22°
 
   ctx.save();
   if (mirror) { ctx.translate(w, 0); ctx.scale(-1, 1); }
   ctx.translate(anchorX, anchorY);
-  ctx.rotate(roll);
+  ctx.rotate(roll + jaunty);
 
-  // --- proportions (all relative to face width) ---
-  const brimRx = faceW * 0.92;
-  const brimRy = faceW * 0.17;
-  const crownH = faceW * 1.02;
-  const baseHalf = faceW * 0.34;   // crown width at the brim
-  const topHalf = faceW * 0.38;    // crown width at the top (classic flare)
+  // --- proportions: small & rounded (relative to face width) ---
+  const brimRx = faceW * 0.34;
+  const brimRy = faceW * 0.075;
+  const crownH = faceW * 0.34;   // short crown = cute
+  const baseHalf = faceW * 0.15;
+  const topHalf = faceW * 0.17;  // gentle flare
 
-  ctx.shadowColor = 'rgba(0,0,0,0.45)';
-  ctx.shadowBlur = faceW * 0.12;
-  ctx.shadowOffsetY = faceW * 0.05;
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = faceW * 0.06;
+  ctx.shadowOffsetY = faceW * 0.025;
 
   // --- brim (ellipse) ---
   const brimGrad = ctx.createLinearGradient(0, -brimRy, 0, brimRy);
@@ -64,11 +73,11 @@ function drawHat(ctx, lms, video, w, h, mirror) {
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  // --- crown (flared quad + rounded top) ---
+  // --- crown (gently flared quad) ---
   const crownGrad = ctx.createLinearGradient(-topHalf, 0, topHalf, 0);
   crownGrad.addColorStop(0, '#050507');
-  crownGrad.addColorStop(0.5, '#26262e');
-  crownGrad.addColorStop(0.55, '#2c2c35');
+  crownGrad.addColorStop(0.5, '#2a2a33');
+  crownGrad.addColorStop(0.55, '#30303a');
   crownGrad.addColorStop(1, '#050507');
   ctx.fillStyle = crownGrad;
   ctx.beginPath();
@@ -81,40 +90,25 @@ function drawHat(ctx, lms, video, w, h, mirror) {
 
   // crown base ellipse (rounds where it meets the brim)
   ctx.beginPath();
-  ctx.ellipse(0, 0, baseHalf, faceW * 0.09, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, baseHalf, faceW * 0.045, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // top cap ellipse (slightly lighter to read as the top surface)
-  ctx.fillStyle = '#1c1c24';
+  // top cap ellipse (rounded top surface)
+  ctx.fillStyle = '#1f1f28';
   ctx.beginPath();
-  ctx.ellipse(0, -crownH, topHalf, faceW * 0.11, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -crownH, topHalf, faceW * 0.06, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // sheen stripe down the crown
-  const sheen = ctx.createLinearGradient(-topHalf * 0.5, 0, topHalf * 0.1, 0);
-  sheen.addColorStop(0, 'rgba(255,255,255,0)');
-  sheen.addColorStop(0.5, 'rgba(255,255,255,0.16)');
-  sheen.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = sheen;
-  ctx.beginPath();
-  ctx.moveTo(-baseHalf, 0);
-  ctx.lineTo(-topHalf, -crownH);
-  ctx.lineTo(topHalf, -crownH);
-  ctx.lineTo(baseHalf, 0);
-  ctx.closePath();
-  ctx.fill();
-
-  // --- coloured band near the base (magician purple) ---
-  const bandTop = -crownH * 0.20;
-  const bandBot = -crownH * 0.05;
+  // --- coloured band near the base ---
+  const bandTop = -crownH * 0.34;
+  const bandBot = -crownH * 0.08;
   const bandGrad = ctx.createLinearGradient(0, bandTop, 0, bandBot);
-  bandGrad.addColorStop(0, '#8f6bff');
-  bandGrad.addColorStop(1, '#5a34d6');
+  bandGrad.addColorStop(0, '#9a78ff');
+  bandGrad.addColorStop(1, '#6a44e0');
   ctx.fillStyle = bandGrad;
+  const wTop = baseHalf + (topHalf - baseHalf) * 0.34;
+  const wBot = baseHalf + (topHalf - baseHalf) * 0.08;
   ctx.beginPath();
-  // follow the crown's slight flare across the band
-  const wTop = baseHalf + (topHalf - baseHalf) * 0.20;
-  const wBot = baseHalf + (topHalf - baseHalf) * 0.05;
   ctx.moveTo(-wBot, bandBot);
   ctx.lineTo(-wTop, bandTop);
   ctx.lineTo(wTop, bandTop);
@@ -122,9 +116,41 @@ function drawHat(ctx, lms, video, w, h, mirror) {
   ctx.closePath();
   ctx.fill();
 
-  // --- a golden sparkle on the band ---
-  drawStar(ctx, baseHalf * 0.45, (bandTop + bandBot) / 2, faceW * 0.09, faceW * 0.04, 4, '#ffe07a');
+  // --- cute little bow on the band + a sparkle ---
+  const bandMidY = (bandTop + bandBot) / 2;
+  drawBow(ctx, 0, bandMidY, faceW * 0.11, '#ff8fd0');
+  drawStar(ctx, topHalf * 0.7, -crownH * 0.86, faceW * 0.06, faceW * 0.025, 4, '#ffe07a');
 
+  ctx.restore();
+}
+
+function drawBow(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.fillStyle = color;
+  ctx.shadowColor = 'rgba(0,0,0,0.25)';
+  ctx.shadowBlur = size * 0.4;
+  const wing = size, hh = size * 0.62;
+  // left triangle wing
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-wing, -hh);
+  ctx.lineTo(-wing, hh);
+  ctx.closePath();
+  ctx.fill();
+  // right triangle wing
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(wing, -hh);
+  ctx.lineTo(wing, hh);
+  ctx.closePath();
+  ctx.fill();
+  // knot
+  ctx.shadowColor = 'transparent';
+  ctx.fillStyle = '#ff6fbf';
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.34, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 

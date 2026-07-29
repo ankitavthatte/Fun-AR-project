@@ -26,7 +26,6 @@
     hands: [],           // array of 21-landmark arrays
     face: null,          // 468 face-mesh landmarks (or null)
     mirror: true,
-    smooth: true,        // smooth-skin filter on by default
     hat: true,           // magician hat on by default
     modeName: 'wand',
     mode: MODES.wand(),
@@ -115,9 +114,8 @@
     ctx.clearRect(0, 0, w, h);
 
     // Face filters sit under the effects, over the live video.
-    if (state.face) {
-      if (state.smooth) drawBeauty(ctx, state.face, video, w, h, state.mirror, 0.8);
-      if (state.hat) drawHat(ctx, state.face, video, w, h, state.mirror);
+    if (state.face && state.hat) {
+      drawHat(ctx, state.face, video, w, h, state.mirror);
     }
 
     // blit persistent paint layer (paint mode)
@@ -161,8 +159,8 @@
     });
     hands.onResults(onHandResults);
 
-    // Face Mesh powers the smooth-skin filter. Optional: if it fails to load
-    // the app still runs (just without face smoothing).
+    // Face Mesh powers the magician-hat filter. Optional: if it fails to load
+    // the app still runs (just without the hat).
     if (typeof FaceMesh !== 'undefined') {
       loadStatus.textContent = 'Loading face model…';
       faceMesh = new FaceMesh({
@@ -185,7 +183,7 @@
       onFrame: async () => {
         tick++;
         await hands.send({ image: video });
-        if (faceMesh && (state.smooth || state.hat) && (!isMobile || tick % 2 === 0)) {
+        if (faceMesh && state.hat && (!isMobile || tick % 2 === 0)) {
           await faceMesh.send({ image: video });
         }
       },
@@ -245,13 +243,6 @@
     mirrorBtn.classList.toggle('active', state.mirror);
   });
 
-  const smoothBtn = document.getElementById('smoothBtn');
-  smoothBtn.addEventListener('click', () => {
-    state.smooth = !state.smooth;
-    smoothBtn.classList.toggle('active', state.smooth);
-    showHint(state.smooth ? '🧖 Smooth skin on' : 'Smooth skin off');
-  });
-
   const hatBtn = document.getElementById('hatBtn');
   hatBtn.addEventListener('click', () => {
     state.hat = !state.hat;
@@ -269,7 +260,6 @@
     const map = { '1': 'wand', '2': 'bubbles', '3': 'paint', '4': 'force' };
     if (map[e.key]) setMode(map[e.key]);
     if (e.key.toLowerCase() === 'c') document.getElementById('clearBtn').click();
-    if (e.key.toLowerCase() === 's') smoothBtn.click();
     if (e.key.toLowerCase() === 'h') hatBtn.click();
   });
 })();
