@@ -60,6 +60,7 @@ npx serve Fun-AR-project
 |---------|--------|
 | Mode buttons | Switch between the four modes |
 | `1` `2` `3` `4` | Keyboard shortcuts for the modes |
+| 🎩 / `H` | Toggle the magician top hat (on by default) |
 | 🧖 / `S` | Toggle the smooth-skin beauty filter (on by default) |
 | 🧹 / `C` | Clear the screen |
 | 🪞 | Toggle mirror (selfie) view |
@@ -73,6 +74,12 @@ face, masks out the skin (keeping eyes and lips sharp), and blends a softened
 copy over just that region — so your skin looks smooth in real time across
 every mode. Toggle it with the 🧖 button or the `S` key. Runs entirely
 on-device like everything else.
+
+### 🎩 Magician hat
+
+A vector magician's top hat rides on your head, tracking your head's
+position, size, and tilt via the same Face Mesh landmarks. It's **on by
+default** — toggle it with the 🎩 button or the `H` key.
 
 ---
 

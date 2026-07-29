@@ -27,6 +27,7 @@
     face: null,          // 468 face-mesh landmarks (or null)
     mirror: true,
     smooth: true,        // smooth-skin filter on by default
+    hat: true,           // magician hat on by default
     modeName: 'wand',
     mode: MODES.wand(),
     score: 0,
@@ -113,9 +114,10 @@
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, w, h);
 
-    // Smooth-skin pass sits under the effects, over the live video.
-    if (state.smooth && state.face) {
-      drawBeauty(ctx, state.face, video, w, h, state.mirror, 0.8);
+    // Face filters sit under the effects, over the live video.
+    if (state.face) {
+      if (state.smooth) drawBeauty(ctx, state.face, video, w, h, state.mirror, 0.8);
+      if (state.hat) drawHat(ctx, state.face, video, w, h, state.mirror);
     }
 
     // blit persistent paint layer (paint mode)
@@ -183,7 +185,7 @@
       onFrame: async () => {
         tick++;
         await hands.send({ image: video });
-        if (faceMesh && (state.smooth || state.face) && (!isMobile || tick % 2 === 0)) {
+        if (faceMesh && (state.smooth || state.hat) && (!isMobile || tick % 2 === 0)) {
           await faceMesh.send({ image: video });
         }
       },
@@ -250,6 +252,13 @@
     showHint(state.smooth ? '🧖 Smooth skin on' : 'Smooth skin off');
   });
 
+  const hatBtn = document.getElementById('hatBtn');
+  hatBtn.addEventListener('click', () => {
+    state.hat = !state.hat;
+    hatBtn.classList.toggle('active', state.hat);
+    showHint(state.hat ? '🎩 Magician hat on' : 'Magician hat off');
+  });
+
   document.getElementById('fsBtn').addEventListener('click', () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
     else document.exitFullscreen?.();
@@ -261,5 +270,6 @@
     if (map[e.key]) setMode(map[e.key]);
     if (e.key.toLowerCase() === 'c') document.getElementById('clearBtn').click();
     if (e.key.toLowerCase() === 's') smoothBtn.click();
+    if (e.key.toLowerCase() === 'h') hatBtn.click();
   });
 })();
