@@ -101,10 +101,11 @@
     if (!state.running) return;
     const w = W(), h = H();
 
-    // trail-fade the overlay for a dreamy look
+    // Clear the overlay every frame so the live camera shows through.
+    // (Effect trails come from the particles' own fade, not a dark wash —
+    // a full-canvas translucent fill would accumulate and hide the video.)
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = 'rgba(10, 10, 26, 0.22)';
-    ctx.fillRect(0, 0, w, h);
+    ctx.clearRect(0, 0, w, h);
 
     // blit persistent paint layer (paint mode)
     if (state.modeName === 'paint') {
