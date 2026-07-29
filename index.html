@@ -48,6 +48,7 @@
           <button class="mode-btn" data-mode="force">🌀 Force Field</button>
         </div>
         <div class="tools">
+          <button id="smoothBtn" class="tool-btn active" title="Smooth skin">🧖</button>
           <button id="clearBtn" class="tool-btn" title="Clear">🧹</button>
           <button id="mirrorBtn" class="tool-btn active" title="Mirror camera">🪞</button>
           <button id="fsBtn" class="tool-btn" title="Fullscreen">⛶</button>
@@ -58,9 +59,11 @@
 
   <!-- MediaPipe Hands (runs on the user's device) -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
 
   <script src="js/particles.js"></script>
+  <script src="js/beauty.js"></script>
   <script src="js/modes.js"></script>
   <script src="js/app.js"></script>
 </body>

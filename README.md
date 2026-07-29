@@ -60,9 +60,19 @@ npx serve Fun-AR-project
 |---------|--------|
 | Mode buttons | Switch between the four modes |
 | `1` `2` `3` `4` | Keyboard shortcuts for the modes |
+| 🧖 / `S` | Toggle the smooth-skin beauty filter (on by default) |
 | 🧹 / `C` | Clear the screen |
 | 🪞 | Toggle mirror (selfie) view |
 | ⛶ | Fullscreen |
+
+### ✨ Smooth-skin filter
+
+A live beauty filter is **on by default**. It uses
+[MediaPipe Face Mesh](https://developers.google.com/mediapipe) to find your
+face, masks out the skin (keeping eyes and lips sharp), and blends a softened
+copy over just that region — so your skin looks smooth in real time across
+every mode. Toggle it with the 🧖 button or the `S` key. Runs entirely
+on-device like everything else.
 
 ---
 

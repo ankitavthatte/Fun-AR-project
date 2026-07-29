@@ -24,7 +24,9 @@
 
   const state = {
     hands: [],           // array of 21-landmark arrays
+    face: null,          // 468 face-mesh landmarks (or null)
     mirror: true,
+    smooth: true,        // smooth-skin filter on by default
     modeName: 'wand',
     mode: MODES.wand(),
     score: 0,
@@ -111,6 +113,11 @@
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, w, h);
 
+    // Smooth-skin pass sits under the effects, over the live video.
+    if (state.smooth && state.face) {
+      drawBeauty(ctx, state.face, video, w, h, state.mirror, 0.8);
+    }
+
     // blit persistent paint layer (paint mode)
     if (state.modeName === 'paint') {
       ctx.globalCompositeOperation = 'lighter';
@@ -126,13 +133,18 @@
 
   /* ---------- MediaPipe wiring ---------- */
   let hands = null;
+  let faceMesh = null;
   let camera = null;
 
-  function onResults(results) {
+  function onHandResults(results) {
     state.hands = results.multiHandLandmarks || [];
   }
+  function onFaceResults(results) {
+    const faces = results.multiFaceLandmarks;
+    state.face = (faces && faces.length) ? faces[0] : null;
+  }
 
-  async function initHands() {
+  async function initTracking() {
     loadStatus.textContent = 'Loading hand-tracking model…';
     hands = new Hands({
       locateFile: (file) =>
@@ -145,10 +157,36 @@
       minDetectionConfidence: 0.6,
       minTrackingConfidence: 0.6,
     });
-    hands.onResults(onResults);
+    hands.onResults(onHandResults);
 
+    // Face Mesh powers the smooth-skin filter. Optional: if it fails to load
+    // the app still runs (just without face smoothing).
+    if (typeof FaceMesh !== 'undefined') {
+      loadStatus.textContent = 'Loading face model…';
+      faceMesh = new FaceMesh({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`,
+      });
+      faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: false,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+      });
+      faceMesh.onResults(onFaceResults);
+    }
+
+    // Alternate the two models across frames on mobile to protect the frame
+    // rate; run both every frame on desktop.
+    let tick = 0;
     camera = new Camera(video, {
-      onFrame: async () => { await hands.send({ image: video }); },
+      onFrame: async () => {
+        tick++;
+        await hands.send({ image: video });
+        if (faceMesh && (state.smooth || state.face) && (!isMobile || tick % 2 === 0)) {
+          await faceMesh.send({ image: video });
+        }
+      },
       // Front-facing camera + a lighter capture size on mobile.
       facingMode: 'user',
       width: isMobile ? 640 : 1280,
@@ -165,7 +203,7 @@
       if (typeof Hands === 'undefined' || typeof Camera === 'undefined') {
         throw new Error('Hand-tracking library failed to load. Check your connection and reload.');
       }
-      await initHands();
+      await initTracking();
       state.running = true;
       splash.classList.add('hidden');
       hud.classList.remove('hidden');
@@ -205,6 +243,13 @@
     mirrorBtn.classList.toggle('active', state.mirror);
   });
 
+  const smoothBtn = document.getElementById('smoothBtn');
+  smoothBtn.addEventListener('click', () => {
+    state.smooth = !state.smooth;
+    smoothBtn.classList.toggle('active', state.smooth);
+    showHint(state.smooth ? '🧖 Smooth skin on' : 'Smooth skin off');
+  });
+
   document.getElementById('fsBtn').addEventListener('click', () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
     else document.exitFullscreen?.();
@@ -215,5 +260,6 @@
     const map = { '1': 'wand', '2': 'bubbles', '3': 'paint', '4': 'force' };
     if (map[e.key]) setMode(map[e.key]);
     if (e.key.toLowerCase() === 'c') document.getElementById('clearBtn').click();
+    if (e.key.toLowerCase() === 's') smoothBtn.click();
   });
 })();
