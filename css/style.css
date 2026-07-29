@@ -45,6 +45,9 @@ html, body {
   display: grid;
   place-items: center;
   padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  overflow-y: auto;                 /* card can scroll on short screens */
+  -webkit-overflow-scrolling: touch;
   background: radial-gradient(circle at 50% 20%, #1c1450 0%, #08081a 75%);
   z-index: 20;
   transition: opacity 0.5s ease;
@@ -118,6 +121,10 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 16px 18px;
+  /* keep clear of notches / status bars */
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-left: calc(18px + env(safe-area-inset-left));
+  padding-right: calc(18px + env(safe-area-inset-right));
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent);
 }
 .brand { font-weight: 800; font-size: 18px; letter-spacing: 0.3px; filter: drop-shadow(var(--glow)); }
@@ -160,6 +167,8 @@ html, body {
   align-items: center;
   gap: 12px;
   padding: 16px 14px 22px;
+  /* clear the home indicator / gesture bar on phones */
+  padding-bottom: calc(22px + env(safe-area-inset-bottom));
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.5), transparent);
 }
 
@@ -214,7 +223,44 @@ html, body {
 .tool-btn:active { transform: scale(0.9); }
 .tool-btn.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 
+/* ---------------- Responsive / mobile ---------------- */
 @media (max-width: 520px) {
-  .mode-btn { padding: 9px 11px; font-size: 13px; }
+  .splash-card { padding: 26px 20px; border-radius: 20px; }
+  .splash-emoji { font-size: 46px; }
+  .splash-card h1 { font-size: 28px; }
+  .tag { font-size: 14px; margin: 6px 0 16px; }
+  .how { font-size: 14px; gap: 8px; margin-bottom: 20px; }
+
+  .hud-top { padding-top: calc(12px + env(safe-area-inset-top)); }
   .brand { font-size: 16px; }
+  .score-box { font-size: 13px; padding: 7px 13px; }
+  .hud-hint { font-size: 12px; padding: 7px 12px; white-space: normal; max-width: 88vw; text-align: center; }
+
+  .mode-btn { padding: 10px 12px; font-size: 13px; }
+  .tool-btn { width: 42px; height: 42px; font-size: 17px; }
+  .hud-bottom { gap: 10px; padding-left: 8px; padding-right: 8px; }
+}
+
+/* Very narrow phones: shrink the mode chips to fit without scrolling */
+@media (max-width: 380px) {
+  .mode-btn { padding: 9px 9px; font-size: 12px; }
+  .mode-switch { gap: 5px; padding: 5px; }
+  .tool-btn { width: 40px; height: 40px; }
+}
+
+/* Landscape phones: keep controls reachable, trim vertical chrome */
+@media (max-height: 480px) and (orientation: landscape) {
+  .splash-card { padding: 18px 22px; }
+  .splash-emoji { font-size: 34px; margin-bottom: 4px; }
+  .splash-card h1 { font-size: 24px; }
+  .how { grid-template-columns: 1fr 1fr; gap: 6px 18px; margin-bottom: 14px; }
+  .hud-bottom { flex-direction: row; justify-content: center; flex-wrap: wrap; padding: 10px; }
+  .hud-hint { top: 54px; }
+}
+
+/* Touch devices: give the finger-sized targets a bit more room */
+@media (hover: none) {
+  .mode-btn:hover { background: transparent; }
+  .mode-btn.active:hover { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .tool-btn:hover { background: var(--panel); }
 }

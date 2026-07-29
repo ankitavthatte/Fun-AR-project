@@ -42,7 +42,11 @@
     pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 200));
   resize();
+
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+    || (navigator.maxTouchPoints > 1 && window.matchMedia('(pointer: coarse)').matches);
 
   const W = () => overlay.width / (Math.min(window.devicePixelRatio || 1, 2));
   const H = () => overlay.height / (Math.min(window.devicePixelRatio || 1, 2));
@@ -136,7 +140,8 @@
     });
     hands.setOptions({
       maxNumHands: 2,
-      modelComplexity: 1,
+      // Lighter model on phones keeps tracking smooth; full model on desktop.
+      modelComplexity: isMobile ? 0 : 1,
       minDetectionConfidence: 0.6,
       minTrackingConfidence: 0.6,
     });
@@ -144,8 +149,10 @@
 
     camera = new Camera(video, {
       onFrame: async () => { await hands.send({ image: video }); },
-      width: 1280,
-      height: 720,
+      // Front-facing camera + a lighter capture size on mobile.
+      facingMode: 'user',
+      width: isMobile ? 640 : 1280,
+      height: isMobile ? 480 : 720,
     });
     await camera.start();
   }
