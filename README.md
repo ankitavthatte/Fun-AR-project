@@ -60,18 +60,9 @@ npx serve Fun-AR-project
 |---------|--------|
 | Mode buttons | Switch between the four modes |
 | `1` `2` `3` `4` | Keyboard shortcuts for the modes |
-| 🎩 / `H` | Toggle the magician top hat (on by default) |
 | 🧹 / `C` | Clear the screen |
 | 🪞 | Toggle mirror (selfie) view |
 | ⛶ | Fullscreen |
-
-### 🎩 Magician hat
-
-A cute little vector magician's top hat perches, tilted, on the side of your
-head — tracking your head's position, size, and tilt via
-[MediaPipe Face Mesh](https://developers.google.com/mediapipe). It's **on by
-default** — toggle it with the 🎩 button or the `H` key. Runs entirely
-on-device like everything else.
 
 ---
 

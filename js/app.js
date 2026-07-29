@@ -24,9 +24,7 @@
 
   const state = {
     hands: [],           // array of 21-landmark arrays
-    face: null,          // 468 face-mesh landmarks (or null)
     mirror: true,
-    hat: true,           // magician hat on by default
     modeName: 'wand',
     mode: MODES.wand(),
     score: 0,
@@ -113,11 +111,6 @@
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, w, h);
 
-    // Face filters sit under the effects, over the live video.
-    if (state.face && state.hat) {
-      drawHat(ctx, state.face, video, w, h, state.mirror);
-    }
-
     // blit persistent paint layer (paint mode)
     if (state.modeName === 'paint') {
       ctx.globalCompositeOperation = 'lighter';
@@ -133,15 +126,10 @@
 
   /* ---------- MediaPipe wiring ---------- */
   let hands = null;
-  let faceMesh = null;
   let camera = null;
 
   function onHandResults(results) {
     state.hands = results.multiHandLandmarks || [];
-  }
-  function onFaceResults(results) {
-    const faces = results.multiFaceLandmarks;
-    state.face = (faces && faces.length) ? faces[0] : null;
   }
 
   async function initTracking() {
@@ -159,34 +147,8 @@
     });
     hands.onResults(onHandResults);
 
-    // Face Mesh powers the magician-hat filter. Optional: if it fails to load
-    // the app still runs (just without the hat).
-    if (typeof FaceMesh !== 'undefined') {
-      loadStatus.textContent = 'Loading face model…';
-      faceMesh = new FaceMesh({
-        locateFile: (file) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`,
-      });
-      faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: false,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
-      faceMesh.onResults(onFaceResults);
-    }
-
-    // Alternate the two models across frames on mobile to protect the frame
-    // rate; run both every frame on desktop.
-    let tick = 0;
     camera = new Camera(video, {
-      onFrame: async () => {
-        tick++;
-        await hands.send({ image: video });
-        if (faceMesh && state.hat && (!isMobile || tick % 2 === 0)) {
-          await faceMesh.send({ image: video });
-        }
-      },
+      onFrame: async () => { await hands.send({ image: video }); },
       // Front-facing camera + a lighter capture size on mobile.
       facingMode: 'user',
       width: isMobile ? 640 : 1280,
@@ -243,13 +205,6 @@
     mirrorBtn.classList.toggle('active', state.mirror);
   });
 
-  const hatBtn = document.getElementById('hatBtn');
-  hatBtn.addEventListener('click', () => {
-    state.hat = !state.hat;
-    hatBtn.classList.toggle('active', state.hat);
-    showHint(state.hat ? '🎩 Magician hat on' : 'Magician hat off');
-  });
-
   document.getElementById('fsBtn').addEventListener('click', () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
     else document.exitFullscreen?.();
@@ -260,6 +215,5 @@
     const map = { '1': 'wand', '2': 'bubbles', '3': 'paint', '4': 'force' };
     if (map[e.key]) setMode(map[e.key]);
     if (e.key.toLowerCase() === 'c') document.getElementById('clearBtn').click();
-    if (e.key.toLowerCase() === 'h') hatBtn.click();
   });
 })();
